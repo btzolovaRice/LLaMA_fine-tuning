@@ -1,6 +1,5 @@
-from typing import Annotated, List, Optional
-from enum import Enum
-from fastapi import APIRouter, Depends, HTTPException, Header
+from typing import Annotated
+from fastapi import APIRouter, Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 import logging
 from ..inference.dynamic_generator import DynamicPlanGenerator
@@ -25,6 +24,7 @@ class InferenceRouter(APIRouter):
 
         @self.post('/generate-plan')
         def generate_plan(request: GeneratePlanRequest) -> GeneratePlanResponse:
+            logging.info("received generate plan request")
             plan = dynamic_plan_generator.generate_plan(request.utterance)
             return GeneratePlanResponse(utterance=request.utterance, plan=plan.plan, model_class=plan.model_class)
 

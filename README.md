@@ -2,13 +2,13 @@
 
 This guide will walk you through the process of pulling a model from an S3 bucket, setting it up in Ollama, installing Poetry, creating a virtual environment, and running a FastAPI application.
 
-If this were being deployed on-device, it would obviously be implemented very different, but the core logic would be the same.
+If this were being deployed on-device, it would have to be implemented differently, but the core logic would be the same.
 
 I have finetuned a llama 3.1 8b model that we will pull in to use as the local model.
 
-Otherwise, you can use the standard llama3.1 in ollama for less accurate results.
+Alternatively, you can use the standard llama3.1 in ollama but it would yield less accurate results.
 
-Some addons here would obviously be to add unit tests, add authN/Z, and add input validation and error handling as well as some better logging and observability/tracing.
+Further work on this problem would be to add unit tests, add authN/Z, and add input validation and error handling as well as some better logging and observability/tracing.
 
 We also would probably want to dockerize the service.
 
@@ -28,10 +28,19 @@ We also would probably want to dockerize the service.
    ```sh
    export AWS_ACCESS_KEY_ID=your_access_key_id
    export AWS_SECRET_ACCESS_KEY=your_secret_access_key
+   export AWS_SESSION_TOKEN=your_session_token_key
    export AWS_DEFAULT_REGION=your_aws_region
    ```
 
+   or make sure your local awscli env is configured so the default credentials provider can reference it.
+
+   The S3 bucket is public read, but your credentials will need permissions on `bedrock:InvokeModel` and Claude Sonnet 3.5 will need to be enabled in your account.
+
+   You can copy `.env.template` into `.env` and set your env vars how you wish.
+
 2. **Download the finetuned model artifacts**:
+
+   This will be quite large, if you just want to test the service, just use llama3.1, in reality we would play around more with the quantization and lora adapter sizes to meet our requirements.
    
    ```sh
    mkdir model
@@ -45,6 +54,8 @@ We also would probably want to dockerize the service.
    ollama run continua
    ```
 
+   You will need to change the model name env var `LOCAL_MODEL_NAME` in your `.env` to use this model, or by default it will use `llama3.1`.
+
 4. **Install poetry and dependencies**:
    ```sh
    python3 -m pip install --upgrade pip && \
@@ -56,6 +67,12 @@ We also would probably want to dockerize the service.
    poetry install --no-root
    ```
 
+   or
+
+   ```sh
+   ./setup_env.sh
+   ```
+
 5. **Run the service**:
    Replace the port with which
    ```sh
@@ -63,7 +80,7 @@ We also would probably want to dockerize the service.
    ```
 
 6. **Make a request**:
-   You can use whatever you want, easiest is probably in the browser at `http://localhost:8080/docs` (or whichever port).
+   You can use whatever you want, easiest is probably in the browser at `http://localhost:8080/docs` (or another available port).
 
    Or you can always use python `requests`, or `curl`
 
@@ -98,9 +115,9 @@ We also would probably want to dockerize the service.
 
    ## Delegation and Inference
 
-   For delegation, we ask the small model to give us a confidence score (not optimal), and we keep a sliding window of these scores in a bounded list. 
+   For delegation, we ask the small model to give us a confidence score (not optimal, but valid, see [this paper](https://arxiv.org/html/2406.03441v1)), and we keep a sliding window of these scores in a bounded list. 
 
-   We take the p20 confidence (to adjust for the small models biases for score ranges) and send the lowest confidence 20% to Claude Sonnet 3.5 via Amazon Bedrock if the delegation ration is < 20%.
+   We take the p20 confidence (to adjust for the small model's biases for score ranges) and send the lowest confidence 20% to Claude Sonnet 3.5 via Amazon Bedrock if the delegation ration is < 20%.
 
    We also take a running count to calculate the ratio up to a maximum bound before it resets. One caveat is that when `n` is small in the counter, the ratios will be skewed, and the first call will always go to the large model.
 

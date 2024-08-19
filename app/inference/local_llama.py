@@ -76,7 +76,8 @@ class OllamaPlanGenerator(PlanGenerator):
     
     def generate_plan(self, utterance: str) -> GeneratedPlan:
         res = ollama.generate(model=self.model_name, system=UTTERANCE_PLAN_PROMPT_TEMPLATE, prompt=utterance)
-        logging.info('-'*100)
-        logging.info(res['response'])
+        # will want to disable debug level in production, but helpful for dev
+        logging.debug('-'*100)
+        logging.debug(res['response'])
         res_dict = json.loads(escape_quotes(res['response']))
         return GeneratedPlan(plan=res_dict['plan'], confidence=res_dict['confidence'], model_class=ModelClass.SMALL)
