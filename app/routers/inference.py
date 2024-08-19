@@ -1,6 +1,5 @@
-from typing import Annotated, List, Optional
-from enum import Enum
-from fastapi import APIRouter, Depends, HTTPException, Header
+from typing import Annotated
+from fastapi import APIRouter, Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 import logging
 from ..inference.dynamic_generator import DynamicPlanGenerator
