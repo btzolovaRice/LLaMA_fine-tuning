@@ -1,4 +1,4 @@
-# Continua Model Setup and FastAPI Application
+# Model Setup and FastAPI Application
 
 This guide will walk you through the process of pulling a model from an S3 bucket, setting it up in Ollama, installing Poetry, creating a virtual environment, and running a FastAPI application.
 
